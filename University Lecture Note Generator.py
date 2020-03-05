@@ -1,65 +1,85 @@
 from datetime import date
 import os
 
-# Populate this with fully-qualified module titles. E.g., "CO310 Introduction to Object Oriented Programming".
-# These should always contain a 5 character module code followed by a module title.
-modules = []
+modules = ["CO510 Software Engineering", "CO518 Algorithms, Correctness and Efficiency",
+           "CO519 Theory of Computing", "CO527 Operating Systems and Architecture",
+           "CO532 Database Systems", "CO539 Web Development", "CO545 Functional Programming"]
 
 def getModule():
-    mod = input('Enter module (or "NONE"): ')
-    if mod.upper() == "NONE":
-        return None
+    for i in range(len(modules)):
+        print(modules[i])
+    mod = input('Enter module: CO5')
     for i in range (len(modules)):
-        if modules[i][0:5] == mod:
+        if modules[i][0:5] == "CO5" + mod:
             return modules[i]        
     return getModule()
 
-# List options
-for i in range(len(modules)):
-    print(modules[i])
+def validLectureTitle(title):
+    validChars = list("-()qwertyuiopasdfghjklzxcvbnm1234567890 ")
+    for char in title:
+        if char.lower() not in validChars:
+            print("Invalid char: " + char)
+            return False
+    return True
+
+def getLectureTitle():
+    lecTitle = input("Lecture title: ")
+    while validLectureTitle(lecTitle) == False:
+        lecTitle = input("Lecture title: ")
+    return lecTitle
+
+def getFileLines(module, title):
+    templateFile = open("Lecture Note Template.md", "r")
+    lines = templateFile.readlines()
+
+    lines[0] = "# " + title + " #\n"
+    lines[8] = "*" + date.today().strftime("%Y-%m-%d") + "*\n"
+    lines[10] = "**" + module + "**"
+    return lines
     
+def createFile(filepath, lines):
+    print("filepath: " + filepath)
+    myFile = open(filepath, "w")
+    myFile.writelines(lines)
+    myFile.close()
+
+def getFilename(module, title):
+    filename = ""
+    if not module is None:
+        filename += module[0:5] + " "
+    else:
+        module = title
+    filename += date.today().strftime("%y%m%d")
+    if title != "":
+        filename += " " + title
+    return filename + ".md"
+
+# Get the module
+
 requestedModule = getModule()
 
-# Establish today's date in form yyyy-mm-dd
-today = date.today().strftime("%Y-%m-%d")
+# Get the lecture title
 
-lecTitle = input("Lecture title: ")
+lecTitle = getLectureTitle()
 
-filename = ""
+# Prepare the filename and filepath
+
 subdir = ""
-if not requestedModule is None:
-    filename += requestedModule[0:5] + " "
-    subdir = requestedModule + "/Lecture Notes"
-filename += date.today().strftime("%y%m%d")
-if lecTitle != "":
-    filename += " " + lecTitle
-filename += ".md"
+
+subdir = requestedModule + "/Lecture Notes"
+
+filename = getFilename(requestedModule, lecTitle)
 
 filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), subdir, filename)
 
-print("filepath: " + filepath)
+# Prepare the file template
 
-myFile = open(filepath, "w")
+lines = getFileLines(requestedModule, lecTitle)
 
-# Load the template file
-templateFile = open("Lecture Note Template.md", "r")
-lines = templateFile.readlines()
+# Create the file
 
-# Replace placeholder values from the template with correct values
-if requestedModule is None:
-    requestModule = lecTitle
-    
-switcher = {
-    1: "# " + lecTitle + " #\n",
-    9: "*" + today + "*\n",
-    11: "**" + requestedModule + "**"
-}
-    
-for i in range (0, len(lines)):
-    if switcher.get(i + 1, None) != None:
-        lines[i] = switcher.get(i + 1)
+createFile(filepath, lines)
 
-myFile.writelines(lines)
-myFile.close()
+# Run the file
 
 os.startfile(filepath)
